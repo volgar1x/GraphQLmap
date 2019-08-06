@@ -21,17 +21,35 @@ def jq(data):
     return json.dumps(data, indent=4, sort_keys=True)
 
 
+REQUESTER_SESSION = None
+
+
+def requester_session(sess=None):
+    global REQUESTER_SESSION
+    REQUESTER_SESSION = sess or requests.Session()
+    return REQUESTER_SESSION
+
+
 def requester(URL, method, payload):
+    global REQUESTER_SESSION
+    sess = REQUESTER_SESSION or requests
+
     if method == "POST":
-        data = {
-            "query": payload.replace("+", " ")
+        headers = {
+            "content-type": "application/json",
         }
-        r = requests.post(URL, data=data, verify=False)
-        if r.status_code == 500:
+        json = {
+            "query": payload,
+        }
+        r = sess.post(URL, headers=headers, json=json, verify="burp.crt")
+        if not (200 <= r.status_code < 400):
             print("\033[91m/!\ API didn't respond correctly to a POST method !\033[0m")
+            print(f"\033[91m/!\ API responded {r.status_code} to POST {URL}!\033[0m")
+            print(r.headers)
+            print(r.text)
             return None
     else:
-        r = requests.get( URL+"?query={}".format(payload), verify=False)
+        r = sess.get( URL+"?query={}".format(payload), verify="burp.crt")
     return r
 
 

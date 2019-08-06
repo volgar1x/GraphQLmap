@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 import argparse
 import json
 import re
@@ -6,6 +6,7 @@ import readline
 import requests
 import sys
 import time
+import os
 from utils import *
 from attacks import *
 
@@ -60,6 +61,18 @@ class GraphQLmap(object):
                 
             elif query == "mssqli":
                 blind_mssql(self.url, self.method)
+
+            elif query == "auth":
+                requester_session().headers.update({
+                    "Authorization": input("> Authorization: "),
+                })
+            elif query == "proxy":
+                http_proxy = os.environ.get("http_proxy")
+                https_proxy = os.environ.get("https_proxy")
+                requester_session().proxies.update({
+                    "http":  input(f"> http_proxy[{http_proxy}]:") or http_proxy,
+                    "https": input(f"> https_proxy[{https_proxy}]:") or https_proxy,
+                })
 
             else:
                 exec_advanced(args.url, self.method, query)
